@@ -1,0 +1,10 @@
+[package]
+name         = "diff-stage"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+
+[dependencies]
+diff-types = { workspace = true }
+diff-db    = { workspace = true }

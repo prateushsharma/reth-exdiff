@@ -1,0 +1,9 @@
+[package]
+name         = "diff-testing"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+
+[dependencies]
+diff-types = { workspace = true }

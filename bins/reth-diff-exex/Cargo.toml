@@ -1,0 +1,31 @@
+[package]
+name = "reth-diff-exex"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "reth-diff-exex"
+path = "src/main.rs"
+
+[dependencies]
+# Our own crates
+diff-db   = { path = "../../crates/diff-db" }
+diff-exex = { path = "../../crates/diff-exex" }
+
+# Reth — everything pinned to the same commit as the workspace
+reth-ethereum        = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-builder    = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+eyre        = "0.6"
+color-eyre  = "0.6"
+
+# Logging
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

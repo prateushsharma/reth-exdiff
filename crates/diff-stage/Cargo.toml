@@ -1,10 +1,20 @@
 [package]
-name         = "diff-stage"
-version.workspace      = true
-edition.workspace      = true
-rust-version.workspace = true
-license.workspace      = true
+name = "diff-stage"
+version = "0.1.0"
+edition = "2021"
 
 [dependencies]
-diff-types = { workspace = true }
-diff-db    = { workspace = true }
+# Our crates
+diff-types = { path = "../diff-types" }
+diff-db    = { path = "../diff-db" }
+
+# Reth stage primitives — same pinned commit everywhere
+reth-stages-api = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-primitives  = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+
+# Error handling and logging
+eyre    = "0.6"
+tracing = "0.1"
+
+# SQLite — same version as diff-db uses
+rusqlite = { version = "0.31", features = ["bundled"] }

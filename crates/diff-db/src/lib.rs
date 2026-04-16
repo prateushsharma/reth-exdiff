@@ -75,4 +75,8 @@ impl DiffDb {
         schema::run_migrations(&db.conn)?;
         Ok(db)
     }
+
+    pub fn connection(&self) -> &rusqlite::Connection {
+    &self.conn
+}
 }

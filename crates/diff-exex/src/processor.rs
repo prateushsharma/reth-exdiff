@@ -9,6 +9,7 @@ use reth_primitives_traits::NodePrimitives;
 use tracing::{error, info, warn};
 use tokio::sync::mpsc::Receiver;
 use reth_exex_types::ExExNotification;
+use tokio::sync::watch;
 
 use crate::cursor::ExExCursor;
 use crate::extractor::extract_chain_diffs;
@@ -21,9 +22,10 @@ pub struct DiffExEx<Node: FullNodeComponents> {
     ctx:    ExExContext<Node>,
     db:     DiffDb,
     cursor: ExExCursor,
+     reorg_tx:  Option<watch::Sender<Option<u64>>>,
 }
 
-impl<Node> DiffExEx<Node>
+impl<Node: FullNodeComponents> DiffExEx<Node>
 where
     Node: FullNodeComponents,
     Node::Types: reth_node_builder::NodeTypes,
@@ -32,13 +34,30 @@ where
         TxReceipt + Encodable2718,
 {
     /// Create a new DiffExEx, loading cursor from the database.
-    pub fn new(ctx: ExExContext<Node>, db: DiffDb) -> Result<Self, diff_db::DbError> {
-        let cursor = ExExCursor::load_from_db(&db)?;
-        info!(
-            durable_cursor = cursor.durable,
-            "DiffExEx initialized"
-        );
-        Ok(Self { ctx, db, cursor })
+      pub fn new(ctx: ExExContext<Node>, db: DiffDb) -> Self {
+        let checkpoint = db.get_latest_checkpoint()
+            .expect("load initial checkpoint");
+        let cursor = ExExCursor::load_from_db(checkpoint);
+        Self { ctx, db, cursor, reorg_tx: None }
+    }
+
+     pub fn new_with_reorg_signal(
+        ctx:      ExExContext<Node>,
+        db:       DiffDb,
+        reorg_tx: watch::Sender<Option<u64>>,
+    ) -> Self {
+        let checkpoint = db.get_latest_checkpoint()
+            .expect("load initial checkpoint");
+        let cursor = ExExCursor::load_from_db(checkpoint);
+        Self { ctx, db, cursor, reorg_tx: Some(reorg_tx) }
+    }
+
+    fn signal_reorg(&self, unwind_to: u64) {
+        if let Some(ref tx) = self.reorg_tx {
+            // Ignore send error — compaction task may have already exited
+            // during shutdown.
+            let _ = tx.send(Some(unwind_to));
+        }
     }
 
     /// Run the ExEx loop indefinitely.
@@ -64,7 +83,7 @@ where
                         new_tip = new.tip().number(),
                         "ChainReorged"
                     );
-                    if let Err(e) = self.handle_reorg(old, new) {
+                    if let Err(e) = self.signal_reorg(reverted_chain_first_block - 1);{
                         error!(err = ?e, "failed to handle reorg");
                         return Err(e.into());
                     }
@@ -197,72 +216,78 @@ where
     }
 
     /// Handle ChainReorged: revert old chain, then commit new chain.
-    fn handle_reorg(
-        &mut self,
-        old: &std::sync::Arc<reth_execution_types::Chain
-            <Node::Types as reth_node_builder::NodeTypes>::Primitives,
-        >>,
-        new: &std::sync::Arc<reth_execution_types::Chain
-            <Node::Types as reth_node_builder::NodeTypes>::Primitives,
-        >>,
-    ) -> Result<(), diff_db::DbError> {
-        // Step 1: revert old chain blocks in descending order.
-        // We must revert tip first, then walk back to the fork point.
-        let mut old_numbers: Vec<u64> = old.blocks().keys().copied().collect();
-        old_numbers.sort_unstable_by(|a, b| b.cmp(a)); // descending
+    async fn handle_reorg(
+    &mut self,
+    old_chain: &Chain,
+    new_chain: &Chain,
+) -> eyre::Result<()> {
+    // Step 1: revert all blocks in old_chain, tip-first (highest block first).
+    // This applies the revert ops in reverse order so the DB returns to the
+    // state it was in before those blocks were committed.
+    let mut old_blocks: Vec<u64> = old_chain.blocks().keys().copied().collect();
+    old_blocks.sort_unstable_by(|a, b| b.cmp(a)); // descending
 
-        for block_number in old_numbers {
-            // Mark block as reorged in canonical_blocks table.
-            if let Some(block) = old.blocks().get(&block_number) {
-                self.db.mark_reorged(&block.hash())?;
-            }
-            // Apply revert ops to undo account/storage/receipt diffs.
-            apply_revert(&self.db, block_number)?;
-        }
+    for block_number in &old_blocks {
+        apply_revert(&self.db, *block_number)
+            .context("apply revert in handle_reorg")?;
 
-        // Roll back cursor to the last common ancestor.
-        let fork_block = old.blocks().keys().next().copied().unwrap_or(0);
-        let rollback_to = fork_block.saturating_sub(1);
-        self.cursor.rollback_to(rollback_to, &self.db)?;
-
-        info!(
-            rollback_to,
-            new_tip = new.tip().number(),
-            "reorg revert complete, committing new chain"
-        );
-
-        // Step 2: commit new chain.
-        self.handle_commit(new)?;
-
-        Ok(())
+        self.db
+            .mark_reorged(*block_number)
+            .context("mark_reorged in handle_reorg")?;
     }
+
+    // Step 2: roll back the cursor to before the old chain.
+    let reorg_base = old_blocks.last().copied().unwrap_or(0).saturating_sub(1);
+    self.cursor.rollback_to(&self.db, reorg_base)
+        .context("cursor rollback in handle_reorg")?;
+
+    // Step 3: signal the compaction task to unwind its indexes.
+    //
+    // reorg_base is the last block that is still canonical after the reorg.
+    // The compaction task will delete index rows for everything above this.
+    //
+    // Example: old chain was blocks 3,4,5. reorg_base = 2.
+    // Compaction task deletes address_block_index WHERE block_number > 2.
+    self.signal_reorg(reorg_base);
+
+    // Step 4: commit the new canonical chain.
+    handle_commit_inner(&self.db, &mut self.cursor, new_chain)
+        .await
+        .context("handle_commit in handle_reorg")?;
+
+    Ok(())
+}
 
     /// Handle ChainReverted: revert old chain, no replacement yet.
-    fn handle_revert(
-        &mut self,
-        old: &std::sync::Arc<reth_execution_types::Chain
-            <Node::Types as reth_node_builder::NodeTypes>::Primitives,
-        >>,
-    ) -> Result<(), diff_db::DbError> {
-        let mut old_numbers: Vec<u64> = old.blocks().keys().copied().collect();
-        old_numbers.sort_unstable_by(|a, b| b.cmp(a));
+    async fn handle_revert(
+    &mut self,
+    old_chain: &Chain,
+) -> eyre::Result<()> {
+    // Revert blocks tip-first.
+    let mut old_blocks: Vec<u64> = old_chain.blocks().keys().copied().collect();
+    old_blocks.sort_unstable_by(|a, b| b.cmp(a)); // descending
 
-        for block_number in old_numbers {
-            if let Some(block) = old.blocks().get(&block_number) {
-                self.db.mark_reorged(&block.hash())?;
-            }
-            apply_revert(&self.db, block_number)?;
-        }
+    for block_number in &old_blocks {
+        apply_revert(&self.db, *block_number)
+            .context("apply revert in handle_revert")?;
 
-        let fork_block  = old.blocks().keys().next().copied().unwrap_or(0);
-        let rollback_to = fork_block.saturating_sub(1);
-        self.cursor.rollback_to(rollback_to, &self.db)?;
-
-        warn!(
-            rollback_to,
-            "chain reverted with no replacement — waiting for new canonical chain"
-        );
-
-        Ok(())
+        self.db
+            .mark_reorged(*block_number)
+            .context("mark_reorged in handle_revert")?;
     }
+
+    // Roll back cursor.
+    let revert_base = old_blocks.last().copied().unwrap_or(0).saturating_sub(1);
+    self.cursor.rollback_to(&self.db, revert_base)
+        .context("cursor rollback in handle_revert")?;
+
+    // Signal compaction task.
+    //
+    // revert_base is the last surviving canonical block.
+    // Example: reverted blocks 4,5. revert_base = 3.
+    // Compaction task deletes index rows WHERE block_number > 3.
+    self.signal_reorg(revert_base);
+
+    Ok(())
+}
 }

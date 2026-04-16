@@ -1,9 +1,36 @@
 [package]
-name         = "reth-diff-stage"
-version.workspace      = true
-edition.workspace      = true
-rust-version.workspace = true
-license.workspace      = true
+name = "reth-diff-stage"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "reth-diff-stage"
+path = "src/main.rs"
 
 [dependencies]
-diff-stage = { workspace = true }
+# Our crates
+diff-db    = { path = "../../crates/diff-db" }
+diff-exex  = { path = "../../crates/diff-exex" }
+diff-stage = { path = "../../crates/diff-stage" }
+
+# Reth
+reth-ethereum     = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-builder = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-stages-api   = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+eyre       = "0.6"
+color-eyre = "0.6"
+
+# Logging
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Shared-ownership of DiffDb between ExEx task and compaction task
+# (Arc already in std, no extra dep needed)

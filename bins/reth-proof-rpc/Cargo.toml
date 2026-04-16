@@ -1,10 +1,38 @@
 [package]
-name         = "reth-proof-rpc"
-version.workspace      = true
-edition.workspace      = true
-rust-version.workspace = true
-license.workspace      = true
+name = "reth-proof-rpc"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "reth-proof-rpc"
+path = "src/main.rs"
 
 [dependencies]
-diff-db    = { workspace = true }
-diff-proof = { workspace = true }
+# Our crates
+diff-db    = { path = "../../crates/diff-db" }
+diff-proof = { path = "../../crates/diff-proof" }
+diff-types = { path = "../../crates/diff-types" }
+
+# HTTP server
+axum = { version = "0.7", features = ["json"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Alloy primitives for address/hash parsing
+alloy-primitives = "1.5.6"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Error handling and logging
+eyre               = "0.6"
+color-eyre         = "0.6"
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

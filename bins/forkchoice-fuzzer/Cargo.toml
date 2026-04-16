@@ -1,10 +1,29 @@
 [package]
-name         = "forkchoice-fuzzer"
-version.workspace      = true
-edition.workspace      = true
-rust-version.workspace = true
-license.workspace      = true
+name = "forkchoice-fuzzer"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "forkchoice-fuzzer"
+path = "src/main.rs"
 
 [dependencies]
-diff-exex  = { workspace = true }
-diff-stage = { workspace = true }
+# Our crates
+diff-db      = { path = "../../crates/diff-db" }
+diff-exex    = { path = "../../crates/diff-exex" }
+diff-stage   = { path = "../../crates/diff-stage" }
+diff-testing = { path = "../../crates/diff-testing" }
+
+# Alloy primitives for addresses, hashes
+alloy-primitives = "1.5.6"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+eyre       = "0.6"
+color-eyre = "0.6"
+
+# Logging
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

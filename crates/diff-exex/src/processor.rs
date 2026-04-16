@@ -7,6 +7,8 @@ use reth_exex::{ExExContext, ExExEvent};
 use reth_node_api::FullNodeComponents;
 use reth_primitives_traits::NodePrimitives;
 use tracing::{error, info, warn};
+use tokio::sync::mpsc::Receiver;
+use reth_exex_types::ExExNotification;
 
 use crate::cursor::ExExCursor;
 use crate::extractor::extract_chain_diffs;
@@ -157,6 +159,40 @@ where
             );
         }
 
+        Ok(())
+    }
+
+       pub async fn run_with_receiver(
+        db: Arc<DiffDb>,
+        mut receiver: Receiver<ExExNotification>,
+    ) -> eyre::Result<()> {
+        // Load the durable checkpoint to resume from.
+        let checkpoint = db.get_latest_checkpoint()
+            .context("load checkpoint on startup")?;
+
+        let mut cursor = ExExCursor::load_from_db(checkpoint);
+
+        while let Some(notification) = receiver.recv().await {
+            match notification {
+                ExExNotification::ChainCommitted { new } => {
+                    handle_commit(&db, &mut cursor, &new)
+                        .await
+                        .context("handle_commit in run_with_receiver")?;
+                }
+                ExExNotification::ChainReorged { old, new } => {
+                    handle_reorg(&db, &mut cursor, &old, &new)
+                        .await
+                        .context("handle_reorg in run_with_receiver")?;
+                }
+                ExExNotification::ChainReverted { old } => {
+                    handle_revert(&db, &mut cursor, &old)
+                        .await
+                        .context("handle_revert in run_with_receiver")?;
+                }
+            }
+        }
+
+        // Receiver closed — clean exit.
         Ok(())
     }
 

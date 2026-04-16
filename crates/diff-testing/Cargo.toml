@@ -1,9 +1,34 @@
 [package]
-name         = "diff-testing"
-version.workspace      = true
-edition.workspace      = true
-rust-version.workspace = true
-license.workspace      = true
+name = "diff-testing"
+version = "0.1.0"
+edition = "2021"
+
+# This crate is test infrastructure. It should only appear in
+# dev-dependencies of other crates, never in production deps.
+# We still build it as a normal lib so the fuzzer can depend on it.
 
 [dependencies]
-diff-types = { workspace = true }
+# Our crates
+diff-types = { path = "../diff-types" }
+diff-db    = { path = "../diff-db" }
+diff-proof = { path = "../diff-proof" }
+
+# Reth types needed to construct fake notifications
+reth-exex-types = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-primitives  = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-execution-types = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-trie-common = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+
+# Alloy types
+alloy-primitives  = "1.5.6"
+alloy-consensus   = "2.0.0"
+alloy-rlp         = "0.3"
+
+# revm state types for BundleState construction
+revm-state = "11.0.0"
+
+# Error handling
+eyre = "0.6"
+
+# SQLite for invariant queries
+rusqlite = { version = "0.31", features = ["bundled"] }

@@ -1,0 +1,78 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/diff-types",
+    "crates/diff-db",
+    "crates/diff-exex",
+    "crates/diff-stage",
+    "crates/diff-proof",
+    "crates/diff-testing",
+    "bins/reth-diff-exex",
+    "bins/reth-diff-stage",
+    "bins/reth-proof-rpc",
+    "bins/forkchoice-fuzzer",
+]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2021"
+rust-version = "1.81"
+license      = "MIT"
+
+[workspace.dependencies]
+
+# internal crates
+diff-types   = { path = "crates/diff-types" }
+diff-db      = { path = "crates/diff-db" }
+diff-exex    = { path = "crates/diff-exex" }
+diff-stage   = { path = "crates/diff-stage" }
+diff-proof   = { path = "crates/diff-proof" }
+diff-testing = { path = "crates/diff-testing" }
+
+# reth - pinned to commit 0a9af7907f2d52f7183994a053104268c9cad7ef
+# source: github.com/paradigmxyz/reth
+# to upgrade: update all rev= fields below, then cargo test
+
+reth-exex = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-exex-types = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-stages = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-builder = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef", features = ["node", "exex", "cli"] }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+
+# alloy - must match reth's pinned version exactly
+# reth pins: alloy-primitives = "1.5.6"
+alloy-primitives = { version = "1.5.6", default-features = false, features = ["map-foldhash"] }
+alloy-rlp        = { version = "0.3" }
+
+# storage
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# async
+tokio = { version = "1", features = ["full"] }
+
+# errors
+eyre      = "0.6"
+thiserror = "1"
+
+# serde
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# logging
+tracing = "0.1"
+
+# futures
+futures-util = "0.3"
+
+[profile.dev]
+opt-level   = 1
+incremental = true
+
+[profile.release]
+opt-level = 3
+lto       = "thin"

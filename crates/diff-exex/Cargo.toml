@@ -1,0 +1,36 @@
+[package]
+name                   = "diff-exex"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+
+[dependencies]
+diff-types = { workspace = true }
+diff-db    = { workspace = true }
+
+# reth
+reth-exex              = { workspace = true }
+reth-exex-types        = { workspace = true }
+reth-node-builder      = { workspace = true }
+reth-primitives-traits = { workspace = true }
+
+# alloy
+alloy-primitives  = { workspace = true }
+alloy-rlp         = { workspace = true }
+alloy-consensus   = { version = "2.0.0", default-features = false }
+alloy-consensus = { workspace = true }
+
+# async
+tokio        = { workspace = true }
+futures-util = { workspace = true }
+
+# errors
+eyre      = { workspace = true }
+thiserror = { workspace = true }
+
+# serde
+serde_json = { workspace = true }
+
+# logging
+tracing = { workspace = true }

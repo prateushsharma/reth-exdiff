@@ -9,7 +9,7 @@ diff-types = { path = "../diff-types" }
 diff-db    = { path = "../diff-db" }
 
 # Alloy trie for MPT construction and proof generation
-alloy-trie      = "0.7"
+alloy-trie = { workspace = true }
 alloy-primitives = "1.5.6"
 alloy-rlp       = "0.3"
 
@@ -26,3 +26,4 @@ tracing = "0.1"
 
 # Hex encoding for proof node bytes in output
 hex = "0.4"
+rusqlite = { workspace = true, features = ["bundled"] }

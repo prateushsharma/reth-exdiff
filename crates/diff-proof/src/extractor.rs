@@ -9,7 +9,7 @@ use std::sync::Arc;
 use alloy_primitives::{BlockHash, BlockNumber, B256};
 use diff_db::DiffDb;
 use eyre::{bail, Context};
-use rusqlite::params;
+use rusqlite::{params, OptionalExtension};
 use tracing::{debug, info};
 
 use crate::{

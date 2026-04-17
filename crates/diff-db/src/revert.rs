@@ -21,7 +21,7 @@ impl DiffDb {
     }
 
     /// Load all revert ops for a block in reverse sequence order.
-    /// This is the correct order to apply them — last written, first undone.
+    /// Last written, first undone — correct order for applying reverts.
     pub fn get_revert_ops_for_block(
         &self,
         block: BlockNumber,
@@ -54,7 +54,6 @@ impl DiffDb {
     }
 
     /// Delete all revert ops for a block after they have been applied.
-    /// Called after successful reorg revert to keep the table clean.
     pub fn delete_revert_ops_for_block(
         &self,
         block: BlockNumber,

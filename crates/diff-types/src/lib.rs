@@ -9,5 +9,5 @@ pub use account::{AccountDiff, ChangeKind};
 pub use canonical::{CanonicalBlock, CanonicalStatus};
 pub use checkpoint::StageCheckpoint;
 pub use receipt::ReceiptArtifact;
-pub use revert::RevertOp;
+pub use revert::{RevertOp, RevertTable};
 pub use storage::StorageDiff;

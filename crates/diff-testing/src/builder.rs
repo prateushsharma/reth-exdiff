@@ -13,7 +13,7 @@ use eyre::Context;
 use revm_state::{AccountInfo, BundleAccount, BundleState, StorageSlot};
 use reth_execution_types::{ExecutionOutcome};
 use reth_exex_types::{Chain, ExExNotification};
-use reth_primitives::{RecoveredBlock, SealedBlock, Block, BlockBody};
+use reth_ethereum_primitives::{RecoveredBlock, SealedBlock, Block, BlockBody};
 use reth_trie_common::HashedPostState;
 
 use crate::types::{FakeBlock, FakeAccountChange, FakeAccountInfo};

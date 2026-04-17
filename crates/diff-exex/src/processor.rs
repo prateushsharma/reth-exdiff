@@ -5,7 +5,7 @@ use diff_types::{CanonicalBlock, CanonicalStatus};
 use futures_util::TryStreamExt;
 use reth_exex::{ExExContext, ExExEvent};
 use reth_node_api::FullNodeComponents;
-use reth_primitives_traits::NodePrimitives;
+use reth_ethereum_primitives::NodePrimitives;
 use tracing::{error, info, warn};
 use tokio::sync::mpsc::Receiver;
 use reth_exex_types::ExExNotification;

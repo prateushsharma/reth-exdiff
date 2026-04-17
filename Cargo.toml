@@ -40,8 +40,8 @@ reth-node-builder = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 reth-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef", features = ["node", "exex", "cli"] }
 reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-types          = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 
 # alloy - must match reth's pinned version exactly

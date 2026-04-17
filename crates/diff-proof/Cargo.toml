@@ -14,8 +14,8 @@ alloy-primitives = "1.5.6"
 alloy-rlp       = "0.3"
 
 # Reth primitives for BlockNumHash, B256 etc
-reth-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
-
+reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-types          = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 # Serialization for the proof output
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"

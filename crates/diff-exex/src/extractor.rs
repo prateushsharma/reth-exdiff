@@ -4,7 +4,7 @@ use alloy_primitives::{BlockNumber, B256};
 use diff_types::{
     AccountDiff, ChangeKind, ReceiptArtifact, RevertOp, RevertTable, StorageDiff,
 };
-use reth_primitives_traits::NodePrimitives;
+use reth_ethereum_primitives::NodePrimitives;
 use reth_execution_types::Chain;
 use std::sync::Arc;
 

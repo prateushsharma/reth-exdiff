@@ -13,13 +13,14 @@ diff-db    = { workspace = true }
 reth-exex              = { workspace = true }
 reth-exex-types        = { workspace = true }
 reth-node-builder      = { workspace = true }
-reth-primitives-traits = { workspace = true }
+reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
+reth-node-types          = { git = "https://github.com/paradigmxyz/reth", rev = "0a9af7907f2d52f7183994a053104268c9cad7ef" }
 
 # alloy
 alloy-primitives  = { workspace = true }
 alloy-rlp         = { workspace = true }
-alloy-consensus   = { version = "2.0.0", default-features = false }
-alloy-consensus = { workspace = true }
+alloy-consensus   = { version = "2.0.0", default-features = false, workspace = true  }
+
 
 # async
 tokio        = { workspace = true }
